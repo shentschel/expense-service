@@ -23,18 +23,21 @@ export class CategoryService {
    * @param createCategoryDto
    */
   create(createCategoryDto: CreateCategoryDto): Observable<Category> {
-    const identifier = createCategoryDto.name.trim().toLowerCase();
+    const cleanedIdentifier: string = createCategoryDto.name
+      .trim()
+      .toLowerCase();
+    const identifier = `${cleanedIdentifier}_${createCategoryDto.type.toLowerCase()}`;
 
     return from(
       this.categoryRepository.findBy({
-        name: Like(createCategoryDto.name),
+        name: Like(createCategoryDto.name.trim()),
         type: createCategoryDto.type,
       }),
     ).pipe(
       switchMap((categories: Category[]) => {
-        const foundCategory = categories.find(
-          (category: Category) => category.identifier === identifier,
-        );
+        const foundCategory = categories.find((category: Category) => {
+          return category.identifier === identifier;
+        });
 
         if (foundCategory !== undefined) {
           return throwError(
@@ -46,9 +49,9 @@ export class CategoryService {
         }
 
         const newCategory = new Category();
-        newCategory.name = createCategoryDto.name;
+        newCategory.name = createCategoryDto.name.trim();
         newCategory.type = createCategoryDto.type;
-        newCategory.identifier = createCategoryDto.name.trim().toLowerCase();
+        newCategory.identifier = identifier;
 
         return from(this.categoryRepository.save(newCategory));
       }),
@@ -83,9 +86,11 @@ export class CategoryService {
   ): Observable<Category> {
     return this.findOne(id).pipe(
       switchMap((category: Category) => {
-        category.name = updateCategoryDto.name;
+        const cleanedCategoryName = updateCategoryDto.name.trim().toLowerCase();
+
+        category.name = updateCategoryDto.name.trim();
         category.type = updateCategoryDto.type;
-        category.identifier = updateCategoryDto.name.trim().toLowerCase();
+        category.identifier = `${cleanedCategoryName}_${updateCategoryDto.type.toLowerCase()}`;
 
         return from(this.categoryRepository.update(id, category));
       }),

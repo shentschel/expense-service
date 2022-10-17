@@ -11,7 +11,7 @@ import { ExpensesModule } from './modules/expenses/expenses.module';
     CategoryModule,
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: 'income-expense.sqlite',
+      database: 'expenses.sqlite',
       entities: [Category, Expense],
       synchronize: true,
     }),

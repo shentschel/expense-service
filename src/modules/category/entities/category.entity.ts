@@ -4,12 +4,14 @@ import {
   Entity,
   OneToMany,
   PrimaryGeneratedColumn,
+  Unique,
   UpdateDateColumn,
 } from 'typeorm';
 import { Expense } from '../../expenses/entities/expense.entity';
 import { CategoryType } from './category.enum';
 
 @Entity('category')
+@Unique('u_name_ident', ['type', 'identifier'])
 export class Category {
   @PrimaryGeneratedColumn({ name: 'category_id', type: 'integer' })
   id: number;
@@ -19,7 +21,6 @@ export class Category {
     type: 'varchar',
     length: 40,
     nullable: false,
-    unique: true,
   })
   name: string;
 
@@ -34,7 +35,6 @@ export class Category {
     type: 'varchar',
     length: 40,
     nullable: false,
-    unique: true,
   })
   identifier: string;
 

@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  HttpException,
   HttpStatus,
   NotFoundException,
 } from '@nestjs/common';
@@ -40,7 +41,9 @@ describe('CategoryService', () => {
       mockCategory.id = 10;
       mockCategory.name = 'Sondersachen';
       mockCategory.type = CategoryType.EXPENSE;
-      mockCategory.identifier = mockCategory.name.trim().toLowerCase();
+      mockCategory.identifier = `${mockCategory.name
+        .trim()
+        .toLowerCase()}_${CategoryType.EXPENSE.toLowerCase()}`;
 
       mockRepository = {
         findBy: jest
@@ -106,7 +109,9 @@ describe('CategoryService', () => {
       expectedEntity.name = dto.name;
       expectedEntity.type = dto.type;
       expectedEntity.updatedAt = testDate;
-      expectedEntity.identifier = dto.name.trim().toLowerCase();
+      expectedEntity.identifier = `${dto.name
+        .trim()
+        .toLowerCase()}_${dto.type.toLowerCase()}`;
 
       mockRepository.findBy.mockReturnValue(
         new Promise((resolve) => resolve([])),
@@ -344,6 +349,7 @@ describe('CategoryService', () => {
             database: ':memory:',
             entities: [Category, Expense],
             synchronize: true,
+            dropSchema: true,
           }),
           CategoryModule,
         ],
@@ -356,7 +362,7 @@ describe('CategoryService', () => {
     });
 
     afterEach((done) => {
-      from(repository.clear())
+      from(repository.delete({}))
         .pipe(switchMap(() => from(module.close())))
         .subscribe(() => done());
     });
@@ -373,6 +379,11 @@ describe('CategoryService', () => {
       service
         .create(dto)
         .pipe(
+          catchError((e: HttpException) => {
+            console.log(e);
+
+            return of(e);
+          }),
           switchMap((result: Category) => {
             expect(result.type).toBe(dto.type);
             expect(result.name).toBe(dto.name);
@@ -384,7 +395,9 @@ describe('CategoryService', () => {
         )
         .subscribe((dbResult: Category | null) => {
           expect(dbResult).toBeInstanceOf(Category);
-          expect(dbResult.identifier).toBe(dto.name.trim().toLowerCase());
+          expect(dbResult.identifier).toBe(
+            `${dto.name.trim().toLowerCase()}_${dto.type.toLowerCase()}`,
+          );
 
           done();
         });
@@ -400,8 +413,10 @@ describe('CategoryService', () => {
 
       const existingEntity = new Category();
       existingEntity.name = 'Sondersachen';
-      existingEntity.identifier = existingEntity.name.trim().toLowerCase();
       existingEntity.type = CategoryType.EXPENSE;
+      existingEntity.identifier = `${existingEntity.name
+        .trim()
+        .toLowerCase()}_${existingEntity.type.toLowerCase()}`;
 
       from(repository.save(existingEntity))
         .pipe(

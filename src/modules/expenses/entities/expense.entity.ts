@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { DecimalTransformer } from '../../../transformer/decimal.transformer';
 import { Category } from '../../category/entities/category.entity';
 
 @Entity('expense')
@@ -17,13 +18,18 @@ export class Expense {
   @Column({
     name: 'price',
     type: 'decimal',
-    scale: 10,
-    precision: 2,
+    scale: 2,
+    precision: 10,
     nullable: false,
+    transformer: new DecimalTransformer(),
   })
   price: number;
 
-  @Column({ name: 'date', type: 'datetime', nullable: false })
+  @Column({
+    name: 'date',
+    type: 'datetime',
+    nullable: false,
+  })
   expendedOn: Date;
 
   @Column({ name: 'reason', type: 'text', nullable: false })
